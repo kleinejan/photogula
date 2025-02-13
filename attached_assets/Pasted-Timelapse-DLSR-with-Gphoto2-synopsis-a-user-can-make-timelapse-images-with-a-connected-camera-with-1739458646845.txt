@@ -1,0 +1,66 @@
+Timelapse DLSR with Gphoto2
+
+synopsis:
+a user can make timelapse images with a connected camera with gphoto2.
+For day and night they can have different intervals, and other settings (defined by the capabilities of the camera)
+
+Functionality:
+- Day and night specific settings / interval.
+- Schedule day/night settings and interval for specific dates
+- ftp upload of the last grabbed image
+- preview of the captured images
+- 3 types of twilight (civil / nautical/astronomical) to define Day or Night
+- format a connected USB disk
+- select a camera location by city to determine the twillight
+- edit camera name
+- using python
+
+
+UI
+one nav bar with: Dashboard, capture, calander, preview, upload, system
+
+Dashboard: shows all the vitals of the system
+- toggle capture
+- status of the capture (running / not running)
+- image upload
+- last captured image
+- usb disk space
+
+Capture: Day and night column
+- setting the interval day / night
+- change specific settings day / night
+- Add new settings from the capabilities of the camera.
+
+Calendar: For special events you can add custom intervals and camera settings. These will overwrite the default settings.
+- pick a date and add settings to the day and night for that date
+
+Preview: generic preview of the captures images. This preview needs to super fast so we can scroll through all those 100000 images.
+Perhaps with pagination.
+
+Upload: publish a preview on a website via FTP/SSH
+- test connection
+- file path to upload
+- file name
+- image size
+
+
+System: all generic settings
+- edit name
+- reload camera config
+- reboot
+- format disks
+
+
+Gphoto2
+It's a powerfull library that enables a lot of functons.
+When we do a `gphoto2 --list-all-config`
+This is the output: https://github.com/kleinejan/Gphoto2Json/blob/master/gphoto2-config-input.log
+
+Where we see 4 types:
+RANGE: could be an html range element
+RADIO/ MENU: would be a select menu in html
+TEXT: plain text element
+
+These are all the settings a user can pick to be part of the config.
+So if the users "adds" the ISO to the config. From that point on that setting can be changed for DAY and Night. 
+
