@@ -17,9 +17,10 @@ def get_camera_status():
 def get_camera_settings():
     try:
         # First try to get real camera settings
-        result = subprocess.run(['gphoto2', '--get-all-settings'],
+        result = subprocess.run(['gphoto2', '--list-all-config'],
                               capture_output=True, text=True)
-        if result.returncode == 0:
+        logging.debug(f"Camera settings output: {result.stdout}")
+        if result.returncode == 0 and result.stdout.strip():
             settings = parse_gphoto_settings(result.stdout)
             if settings:  # If we got settings successfully
                 return settings
@@ -45,7 +46,7 @@ def parse_gphoto_settings(output):
 
         if line.startswith('/main/'):
             # New setting found
-            current_path = line.split()[0]
+            current_path = line.split()[0]  # Get path before any spaces
             current_setting = {
                 'full_path': current_path,
                 'section_path': '/'.join(current_path.split('/')[:-1]),
