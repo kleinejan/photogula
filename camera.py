@@ -1,6 +1,7 @@
 import subprocess
 import json
 import logging
+from mock_camera_settings import get_mock_settings
 
 def get_camera_status():
     try:
@@ -15,18 +16,24 @@ def get_camera_status():
 
 def get_camera_settings():
     try:
+        # First try to get real camera settings
         result = subprocess.run(['gphoto2', '--list-all-config'],
                               capture_output=True, text=True)
-        settings = parse_gphoto_settings(result.stdout)
-        return settings
+        if result.returncode == 0:
+            settings = parse_gphoto_settings(result.stdout)
+            return settings
+        else:
+            # If no camera is connected or there's an error, return mock settings
+            logging.info("Using mock camera settings")
+            return get_mock_settings()
     except Exception as e:
-        logging.error(f"Camera settings error: {str(e)}")
-        return {}
+        logging.error(f"Camera settings error: {str(e)}, falling back to mock settings")
+        return get_mock_settings()
 
 def parse_gphoto_settings(output):
     settings = {}
     current_setting = None
-    
+
     for line in output.split('\n'):
         if line.startswith('/main/'):
             current_setting = {
@@ -46,7 +53,7 @@ def parse_gphoto_settings(output):
             if current_setting:
                 choice = line.split(':')[1].strip()
                 current_setting['choices'].append(choice)
-    
+
     return settings
 
 def toggle_capture():
