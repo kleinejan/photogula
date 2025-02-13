@@ -1,0 +1,76 @@
+/* Custom styles to complement Bootstrap dark theme */
+.card {
+    margin-bottom: 1rem;
+}
+
+.progress {
+    height: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    min-width: 2rem;
+}
+
+#image-grid .card {
+    transition: transform 0.2s;
+}
+
+#image-grid .card:hover {
+    transform: scale(1.02);
+    cursor: pointer;
+}
+
+.modal-body img {
+    width: 100%;
+    height: auto;
+}
+
+.badge {
+    font-size: 0.9em;
+    padding: 0.5em 0.8em;
+}
+
+/* System status indicators */
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.status-active {
+    background-color: var(--bs-success);
+}
+
+.status-inactive {
+    background-color: var(--bs-danger);
+}
+
+/* Form styling */
+.form-label {
+    color: var(--bs-gray-300);
+}
+
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Button spacing */
+.btn-group-vertical > .btn,
+.btn-group > .btn {
+    margin-bottom: 0.25rem;
+}
+
+/* Card header styling */
+.card-header {
+    background-color: rgba(var(--bs-dark-rgb), 0.03);
+    border-bottom: 1px solid rgba(var(--bs-light-rgb), 0.125);
+}
+
+/* Navigation active state */
+.navbar-dark .navbar-nav .nav-link.active {
+    color: var(--bs-primary);
+}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title">Camera Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Status: 
+                            <span class="badge {% if camera_status.connected %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ 'Connected' if camera_status.connected else 'Disconnected' }}
+                            </span>
+                        </p>
+                        <p class="mb-1">Capture: 
+                            <span id="capture-status" class="badge bg-secondary">Inactive</span>
+                        </p>
+                    </div>
+                    <button id="toggle-capture" class="btn btn-primary">
+                        Start Capture
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">System Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label>Disk Usage</label>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ system_info.disk_percent }}%">
+                            {{ system_info.disk_percent }}%
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        {{ system_info.disk_used }} / {{ system_info.disk_total }}
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label>Memory Usage</label>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ system_info.memory }}%">
+                            {{ system_info.memory }}%
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label>CPU Usage</label>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ system_info.cpu }}%">
+                            {{ system_info.cpu }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Last Captured Image</h5>
+            </div>
+            <div class="card-body">
+                <div id="last-image" class="text-center">
+                    <p class="text-muted">No images captured yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">Image Preview</h5>
+    </div>
+    <div class="card-body">
+        <div class="row" id="image-grid">
+            {% for image in images %}
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <img src="/captured_images/{{ image }}" class="card-img-top" 
+                         alt="Captured image">
+                    <div class="card-body">
+                        <small class="text-muted">{{ image }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <nav aria-label="Image navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page - 1 if page > 1 else 1 }}">Previous</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page + 1 }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/preview.js') }}"></script>
+{% endblock %}
