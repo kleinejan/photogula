@@ -132,13 +132,17 @@ def create_schedule():
     """Create a new schedule"""
     try:
         data = request.json
-        # Convert time strings to time objects
+        # Convert date and time strings to Python objects
+        start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
         start_time = datetime.strptime(data['start_time'], '%H:%M').time()
         end_time = datetime.strptime(data['end_time'], '%H:%M').time()
 
         schedule = models.ScheduledSettings(
             name=data['name'],
             camera_settings_id=data['camera_settings_id'],
+            start_date=start_date,
+            end_date=end_date,
             start_time=start_time,
             end_time=end_time,
             days_of_week=data['days_of_week'],
@@ -162,6 +166,10 @@ def update_schedule(schedule_id):
             return jsonify({"success": False, "error": "Schedule not found"}), 404
 
         data = request.json
+        if 'start_date' in data:
+            schedule.start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+        if 'end_date' in data:
+            schedule.end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
         if 'start_time' in data:
             schedule.start_time = datetime.strptime(data['start_time'], '%H:%M').time()
         if 'end_time' in data:

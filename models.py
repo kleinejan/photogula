@@ -17,6 +17,8 @@ class ScheduledSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     camera_settings_id = db.Column(db.Integer, db.ForeignKey('camera_settings.id'), nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)  # Daily start time
     end_time = db.Column(db.Time, nullable=False)    # Daily end time
     days_of_week = db.Column(db.String(7))  # e.g., "1111111" for all days, "1000001" for weekends

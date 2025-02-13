@@ -21,8 +21,10 @@
                             <thead>
                                 <tr>
                                     <th>Name</th>
+                                    <th>Date Range</th>
                                     <th>Time Window</th>
                                     <th>Days</th>
+                                    <th>Camera Settings</th>
                                     <th>Interval</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -32,8 +34,10 @@
                                 {% for schedule in schedules %}
                                 <tr>
                                     <td>{{ schedule.name }}</td>
+                                    <td>{{ schedule.start_date.strftime('%Y-%m-%d') }} to {{ schedule.end_date.strftime('%Y-%m-%d') }}</td>
                                     <td>{{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}</td>
                                     <td>{{ schedule.days_of_week }}</td>
+                                    <td>{{ schedule.camera_settings.name }}</td>
                                     <td>{{ schedule.interval_seconds }}s</td>
                                     <td>
                                         <span class="badge {% if schedule.is_active %}bg-success{% else %}bg-danger{% endif %}">
@@ -83,6 +87,16 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" name="start_date" required>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" name="end_date" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
                             <label class="form-label">Start Time</label>
                             <input type="time" class="form-control" name="start_time" required>
                         </div>
@@ -124,22 +138,24 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('saveSchedule').addEventListener('click', function() {
         const form = document.getElementById('createScheduleForm');
         const formData = new FormData(form);
-        
+
         // Convert days checkboxes to binary string
         let daysOfWeek = '';
         for (let i = 0; i < 7; i++) {
             daysOfWeek += document.getElementById(`day_${i}`).checked ? '1' : '0';
         }
-        
+
         const scheduleData = {
             name: formData.get('name'),
             camera_settings_id: parseInt(formData.get('camera_settings_id')),
+            start_date: formData.get('start_date'),
+            end_date: formData.get('end_date'),
             start_time: formData.get('start_time'),
             end_time: formData.get('end_time'),
             days_of_week: daysOfWeek,
             interval_seconds: parseInt(formData.get('interval_seconds'))
         };
-        
+
         fetch('/api/schedules', {
             method: 'POST',
             headers: {
