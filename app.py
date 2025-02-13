@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 import camera
 import utils
+import logging
 
 class Base(DeclarativeBase):
     pass
@@ -11,7 +12,18 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(model_class=Base)
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "timelapse_secret_key"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///timelapse.db"
+
+# Configure database
+database_url = os.environ.get("DATABASE_URL")
+if not database_url:
+    logging.error("DATABASE_URL environment variable is not set")
+    raise RuntimeError("DATABASE_URL must be set")
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_recycle": 300,
+    "pool_pre_ping": True,
+}
 db.init_app(app)
 
 @app.route('/')
@@ -29,7 +41,7 @@ def capture():
 def preview():
     page = request.args.get('page', 1, type=int)
     images = utils.get_captured_images(page)
-    return render_template('preview.html', images=images)
+    return render_template('preview.html', images=images, page=page)
 
 @app.route('/system')
 def system():
