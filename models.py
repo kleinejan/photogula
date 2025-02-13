@@ -7,6 +7,7 @@ class CameraSettings(db.Model):
     day_interval = db.Column(db.Integer, default=300)  # 5 minutes
     night_interval = db.Column(db.Integer, default=600)  # 10 minutes
     location = db.Column(db.String(100))
+    enabled_settings = db.Column(db.JSON)  # List of enabled setting names
     settings_day = db.Column(db.JSON)
     settings_night = db.Column(db.JSON)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

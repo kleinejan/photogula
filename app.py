@@ -35,7 +35,22 @@ def dashboard():
 @app.route('/capture')
 def capture():
     camera_settings = camera.get_camera_settings()
-    return render_template('capture.html', settings=camera_settings)
+    # Get current settings from database
+    settings_config = db.session.query(models.CameraSettings).first()
+    enabled_settings = []
+    intervals = {'day': 300, 'night': 600}
+
+    if settings_config:
+        enabled_settings = settings_config.enabled_settings or []
+        intervals = {
+            'day': settings_config.day_interval,
+            'night': settings_config.night_interval
+        }
+
+    return render_template('capture.html', 
+                         settings=camera_settings,
+                         enabled_settings=enabled_settings,
+                         intervals=intervals)
 
 @app.route('/preview')
 def preview():
@@ -51,6 +66,28 @@ def system():
 def upload():
     return render_template('upload.html')
 
+@app.route('/api/camera/enabled-settings', methods=['POST'])
+def update_enabled_settings():
+    try:
+        data = request.json
+        enabled_settings = data.get('enabled_settings', [])
+
+        settings_config = db.session.query(models.CameraSettings).first()
+        if not settings_config:
+            settings_config = models.CameraSettings(
+                name="Default",
+                enabled_settings=enabled_settings
+            )
+            db.session.add(settings_config)
+        else:
+            settings_config.enabled_settings = enabled_settings
+
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        logging.error(f"Error updating enabled settings: {str(e)}")
+        return jsonify({"success": False, "error": str(e)})
+
 @app.route('/api/camera/toggle', methods=['POST'])
 def toggle_capture():
     status = camera.toggle_capture()
@@ -58,9 +95,28 @@ def toggle_capture():
 
 @app.route('/api/camera/settings', methods=['POST'])
 def update_settings():
-    settings = request.json
-    result = camera.update_settings(settings)
-    return jsonify(result)
+    try:
+        data = request.json
+        day_settings = data.get('day_settings', {})
+        night_settings = data.get('night_settings', {})
+
+        settings_config = db.session.query(models.CameraSettings).first()
+        if not settings_config:
+            settings_config = models.CameraSettings(
+                name="Default",
+                settings_day=day_settings,
+                settings_night=night_settings
+            )
+            db.session.add(settings_config)
+        else:
+            settings_config.settings_day = day_settings
+            settings_config.settings_night = night_settings
+
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        logging.error(f"Error updating settings: {str(e)}")
+        return jsonify({"success": False, "error": str(e)})
 
 with app.app_context():
     import models
