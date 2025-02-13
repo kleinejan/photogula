@@ -33,26 +33,68 @@ def get_camera_settings():
 def parse_gphoto_settings(output):
     settings = {}
     current_setting = None
+    current_section = None
 
     for line in output.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+
         if line.startswith('/main/'):
-            current_setting = {
-                'name': line.split('/')[-1],
-                'type': None,
-                'current': None,
-                'choices': []
-            }
-            settings[current_setting['name']] = current_setting
-        elif line.startswith('Type:'):
-            if current_setting:
-                current_setting['type'] = line.split(':')[1].strip()
-        elif line.startswith('Current:'):
-            if current_setting:
-                current_setting['current'] = line.split(':')[1].strip()
-        elif line.startswith('Choice:'):
-            if current_setting:
-                choice = line.split(':')[1].strip()
+            # Extract section and setting name
+            parts = line.split('/')
+            if len(parts) >= 3:
+                section = parts[2].split()[0]  # Get section name before any spaces
+                setting_name = parts[-1].split()[0]  # Get last part before any spaces
+
+                # Create a readable name for the setting
+                readable_name = setting_name.replace('_', ' ').title()
+
+                current_setting = {
+                    'name': setting_name,
+                    'section': section,
+                    'readable_name': readable_name,
+                    'type': None,
+                    'current': None,
+                    'choices': [],
+                    'range': None,
+                    'readonly': False,
+                    'description': ''
+                }
+                settings[setting_name] = current_setting
+
+        elif current_setting:
+            if line.startswith('Label:'):
+                current_setting['readable_name'] = line.split(':', 1)[1].strip()
+            elif line.startswith('Type:'):
+                type_value = line.split(':', 1)[1].strip()
+                if 'RANGE' in type_value:
+                    current_setting['type'] = 'RANGE'
+                elif 'RADIO' in type_value or 'MENU' in type_value:
+                    current_setting['type'] = 'MENU'
+                else:
+                    current_setting['type'] = 'TEXT'
+            elif line.startswith('Current:'):
+                current_setting['current'] = line.split(':', 1)[1].strip()
+            elif line.startswith('Choice:'):
+                choice = line.split(':', 1)[1].strip()
                 current_setting['choices'].append(choice)
+            elif line.startswith('Bottom:'):
+                if not current_setting['range']:
+                    current_setting['range'] = {}
+                current_setting['range']['min'] = line.split(':', 1)[1].strip()
+            elif line.startswith('Top:'):
+                if not current_setting['range']:
+                    current_setting['range'] = {}
+                current_setting['range']['max'] = line.split(':', 1)[1].strip()
+            elif line.startswith('Step:'):
+                if not current_setting['range']:
+                    current_setting['range'] = {}
+                current_setting['range']['step'] = line.split(':', 1)[1].strip()
+            elif line.startswith('Readonly:'):
+                current_setting['readonly'] = line.split(':', 1)[1].strip().lower() == 'yes'
+            elif line.startswith('Help:') or line.startswith('Info:'):
+                current_setting['description'] = line.split(':', 1)[1].strip()
 
     return settings
 

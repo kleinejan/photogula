@@ -5,25 +5,63 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title">Enable/Disable Settings</h5>
+                <h5 class="card-title">Camera Settings Management</h5>
             </div>
             <div class="card-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="settings-search" 
+                           placeholder="Search settings...">
+                </div>
                 <form id="settings-toggle-form">
-                    <div class="row">
+                    <div class="accordion" id="settingsAccordion">
+                        {% set sections = {} %}
                         {% for name, setting in settings.items() %}
-                        <div class="col-md-3 mb-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" 
-                                       id="toggle-{{ name }}" name="{{ name }}"
-                                       {% if name in enabled_settings %}checked{% endif %}>
-                                <label class="form-check-label" for="toggle-{{ name }}">
-                                    {{ name|title }}
-                                </label>
+                            {% if setting.section not in sections %}
+                                {% set _ = sections.update({setting.section: []}) %}
+                            {% endif %}
+                            {% set _ = sections[setting.section].append((name, setting)) %}
+                        {% endfor %}
+
+                        {% for section, section_settings in sections.items() %}
+                        <div class="accordion-item setting-group" data-section="{{ section }}">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#section-{{ section }}">
+                                    {{ section|title }}
+                                </button>
+                            </h2>
+                            <div id="section-{{ section }}" class="accordion-collapse collapse" 
+                                 data-bs-parent="#settingsAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        {% for name, setting in section_settings %}
+                                        <div class="col-md-4 mb-3 setting-item" 
+                                             data-setting-name="{{ setting.readable_name|lower }}">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="toggle-{{ name }}" name="{{ name }}"
+                                                       {% if name in enabled_settings %}checked{% endif %}
+                                                       {% if setting.readonly %}disabled{% endif %}>
+                                                <label class="form-check-label" for="toggle-{{ name }}"
+                                                       title="{{ setting.description }}">
+                                                    {{ setting.readable_name }}
+                                                    {% if setting.readonly %}
+                                                    <span class="badge bg-secondary">Read-only</span>
+                                                    {% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
-                    <button type="submit" class="btn btn-primary">Save Enabled Settings</button>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">Save Enabled Settings</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -47,11 +85,17 @@
                         {% for name, setting in settings.items() %}
                         {% if name in enabled_settings %}
                         <div class="mb-3">
-                            <label class="form-label">{{ name|title }}</label>
-                            {% if setting.type == 'RANGE' %}
+                            <label class="form-label" title="{{ setting.description }}">
+                                {{ setting.readable_name }}
+                            </label>
+                            {% if setting.type == 'RANGE' and setting.range %}
                             <input type="range" class="form-control" name="day_{{ name }}"
-                                   value="{{ setting.current }}">
-                            {% elif setting.type in ['RADIO', 'MENU'] %}
+                                   value="{{ setting.current }}"
+                                   min="{{ setting.range.min }}"
+                                   max="{{ setting.range.max }}"
+                                   step="{{ setting.range.step }}">
+                            <small class="form-text">Value: <span class="range-value">{{ setting.current }}</span></small>
+                            {% elif setting.type == 'MENU' %}
                             <select class="form-control" name="day_{{ name }}">
                                 {% for choice in setting.choices %}
                                 <option value="{{ choice }}" 
@@ -89,11 +133,17 @@
                         {% for name, setting in settings.items() %}
                         {% if name in enabled_settings %}
                         <div class="mb-3">
-                            <label class="form-label">{{ name|title }}</label>
-                            {% if setting.type == 'RANGE' %}
+                            <label class="form-label" title="{{ setting.description }}">
+                                {{ setting.readable_name }}
+                            </label>
+                            {% if setting.type == 'RANGE' and setting.range %}
                             <input type="range" class="form-control" name="night_{{ name }}"
-                                   value="{{ setting.current }}">
-                            {% elif setting.type in ['RADIO', 'MENU'] %}
+                                   value="{{ setting.current }}"
+                                   min="{{ setting.range.min }}"
+                                   max="{{ setting.range.max }}"
+                                   step="{{ setting.range.step }}">
+                            <small class="form-text">Value: <span class="range-value">{{ setting.current }}</span></small>
+                            {% elif setting.type == 'MENU' %}
                             <select class="form-control" name="night_{{ name }}">
                                 {% for choice in setting.choices %}
                                 <option value="{{ choice }}" 
