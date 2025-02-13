@@ -5,6 +5,8 @@ from sqlalchemy.orm import DeclarativeBase
 import camera
 import utils
 import logging
+from datetime import datetime, time
+from sqlalchemy import and_
 
 class Base(DeclarativeBase):
     pass
@@ -117,6 +119,70 @@ def update_settings():
     except Exception as e:
         logging.error(f"Error updating settings: {str(e)}")
         return jsonify({"success": False, "error": str(e)})
+
+@app.route('/schedules')
+def schedules():
+    """View all schedules"""
+    schedules = db.session.query(models.ScheduledSettings).all()
+    camera_settings = db.session.query(models.CameraSettings).all()
+    return render_template('schedules.html', schedules=schedules, camera_settings=camera_settings)
+
+@app.route('/api/schedules', methods=['POST'])
+def create_schedule():
+    """Create a new schedule"""
+    try:
+        data = request.json
+        # Convert time strings to time objects
+        start_time = datetime.strptime(data['start_time'], '%H:%M').time()
+        end_time = datetime.strptime(data['end_time'], '%H:%M').time()
+
+        schedule = models.ScheduledSettings(
+            name=data['name'],
+            camera_settings_id=data['camera_settings_id'],
+            start_time=start_time,
+            end_time=end_time,
+            days_of_week=data['days_of_week'],
+            interval_seconds=data['interval_seconds'],
+            is_active=data.get('is_active', True)
+        )
+
+        db.session.add(schedule)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Schedule created successfully"})
+    except Exception as e:
+        logging.error(f"Error creating schedule: {str(e)}")
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route('/api/schedules/<int:schedule_id>', methods=['PUT'])
+def update_schedule(schedule_id):
+    """Update an existing schedule"""
+    try:
+        schedule = db.session.query(models.ScheduledSettings).get(schedule_id)
+        if not schedule:
+            return jsonify({"success": False, "error": "Schedule not found"}), 404
+
+        data = request.json
+        if 'start_time' in data:
+            schedule.start_time = datetime.strptime(data['start_time'], '%H:%M').time()
+        if 'end_time' in data:
+            schedule.end_time = datetime.strptime(data['end_time'], '%H:%M').time()
+        if 'days_of_week' in data:
+            schedule.days_of_week = data['days_of_week']
+        if 'interval_seconds' in data:
+            schedule.interval_seconds = data['interval_seconds']
+        if 'is_active' in data:
+            schedule.is_active = data['is_active']
+        if 'name' in data:
+            schedule.name = data['name']
+        if 'camera_settings_id' in data:
+            schedule.camera_settings_id = data['camera_settings_id']
+
+        db.session.commit()
+        return jsonify({"success": True, "message": "Schedule updated successfully"})
+    except Exception as e:
+        logging.error(f"Error updating schedule: {str(e)}")
+        return jsonify({"success": False, "error": str(e)})
+
 
 with app.app_context():
     import models

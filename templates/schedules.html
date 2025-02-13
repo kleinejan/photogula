@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Schedule Management</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createScheduleModal">
+                Create New Schedule
+            </button>
+        </div>
+    </div>
+
+    <!-- Schedules List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Time Window</th>
+                                    <th>Days</th>
+                                    <th>Interval</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for schedule in schedules %}
+                                <tr>
+                                    <td>{{ schedule.name }}</td>
+                                    <td>{{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}</td>
+                                    <td>{{ schedule.days_of_week }}</td>
+                                    <td>{{ schedule.interval_seconds }}s</td>
+                                    <td>
+                                        <span class="badge {% if schedule.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ 'Active' if schedule.is_active else 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary edit-schedule" 
+                                                data-schedule-id="{{ schedule.id }}"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editScheduleModal">
+                                            Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Schedule Modal -->
+<div class="modal fade" id="createScheduleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Schedule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createScheduleForm">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Camera Settings</label>
+                        <select class="form-control" name="camera_settings_id" required>
+                            {% for setting in camera_settings %}
+                            <option value="{{ setting.id }}">{{ setting.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Start Time</label>
+                            <input type="time" class="form-control" name="start_time" required>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">End Time</label>
+                            <input type="time" class="form-control" name="end_time" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Days of Week</label>
+                        <div class="btn-group" role="group">
+                            {% for day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                            <input type="checkbox" class="btn-check" name="day_{{ loop.index0 }}"
+                                   id="day_{{ loop.index0 }}" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="day_{{ loop.index0 }}">{{ day }}</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Interval (seconds)</label>
+                        <input type="number" class="form-control" name="interval_seconds" 
+                               min="5" value="300" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveSchedule">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle schedule creation
+    document.getElementById('saveSchedule').addEventListener('click', function() {
+        const form = document.getElementById('createScheduleForm');
+        const formData = new FormData(form);
+        
+        // Convert days checkboxes to binary string
+        let daysOfWeek = '';
+        for (let i = 0; i < 7; i++) {
+            daysOfWeek += document.getElementById(`day_${i}`).checked ? '1' : '0';
+        }
+        
+        const scheduleData = {
+            name: formData.get('name'),
+            camera_settings_id: parseInt(formData.get('camera_settings_id')),
+            start_time: formData.get('start_time'),
+            end_time: formData.get('end_time'),
+            days_of_week: daysOfWeek,
+            interval_seconds: parseInt(formData.get('interval_seconds'))
+        };
+        
+        fetch('/api/schedules', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(scheduleData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error creating schedule: ' + data.error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
