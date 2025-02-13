@@ -1,6 +1,40 @@
 """Mock camera settings data for testing and development"""
 
 MOCK_CAMERA_SETTINGS = {
+    # Actions Section
+    "/main/actions/autofocusdrive": {
+        "full_path": "/main/actions/autofocusdrive",
+        "section_path": "/main/actions",
+        "name": "autofocusdrive",
+        "readable_name": "Auto Focus Drive",
+        "type": "TOGGLE",
+        "current": "0",
+        "choices": ["0", "1"],
+        "readonly": False,
+        "description": "Trigger auto focus operation"
+    },
+    "/main/actions/manualfocusdrive": {
+        "full_path": "/main/actions/manualfocusdrive",
+        "section_path": "/main/actions",
+        "name": "manualfocusdrive",
+        "readable_name": "Manual Focus Drive",
+        "type": "RANGE",
+        "current": "0",
+        "range": {"min": "-32767", "max": "32767", "step": "1"},
+        "readonly": False,
+        "description": "Manual focus adjustment"
+    },
+    "/main/actions/viewfinder": {
+        "full_path": "/main/actions/viewfinder",
+        "section_path": "/main/actions",
+        "name": "viewfinder",
+        "readable_name": "Viewfinder",
+        "type": "TOGGLE",
+        "current": "0",
+        "choices": ["0", "1"],
+        "readonly": False,
+        "description": "Turn on/off viewfinder"
+    },
     "/main/status/manufacturer": {
         "full_path": "/main/status/manufacturer",
         "section_path": "/main/status",
@@ -45,16 +79,82 @@ MOCK_CAMERA_SETTINGS = {
         "readonly": False,
         "description": "Synchronize camera date and time with PC"
     },
-    "/main/actions/viewfinder": {
-        "full_path": "/main/actions/viewfinder",
-        "section_path": "/main/actions",
-        "name": "viewfinder",
-        "readable_name": "Viewfinder",
+    "/main/settings/meterofftime": {
+        "full_path": "/main/settings/meterofftime",
+        "section_path": "/main/settings",
+        "name": "meterofftime",
+        "readable_name": "Auto Meter Off Time",
+        "type": "MENU",
+        "current": "30",
+        "choices": ["4", "8", "16", "30", "1min", "2min", "4min", "8min", "16min"],
+        "readonly": False,
+        "description": "Auto meter off time"
+    },
+    "/main/settings/datetime": {
+        "full_path": "/main/settings/datetime",
+        "section_path": "/main/settings",
+        "name": "datetime",
+        "readable_name": "Camera Date and Time",
+        "type": "TEXT",
+        "current": "",
+        "choices": [],
+        "readonly": False,
+        "description": "Camera date and time"
+    },
+    "/main/settings/imagecomment": {
+        "full_path": "/main/settings/imagecomment",
+        "section_path": "/main/settings",
+        "name": "imagecomment",
+        "readable_name": "Image Comment",
+        "type": "TEXT",
+        "current": "",
+        "choices": [],
+        "readonly": False,
+        "description": "Image comment"
+    },
+    "/main/settings/imagecommentenable": {
+        "full_path": "/main/settings/imagecommentenable",
+        "section_path": "/main/settings",
+        "name": "imagecommentenable",
+        "readable_name": "Image Comment Enable",
         "type": "TOGGLE",
-        "current": "2",
+        "current": "0",
         "choices": ["0", "1"],
         "readonly": False,
-        "description": "Enable or disable the viewfinder"
+        "description": "Enable image comment"
+    },
+    "/main/settings/recordingmedia": {
+        "full_path": "/main/settings/recordingmedia",
+        "section_path": "/main/settings",
+        "name": "recordingmedia",
+        "readable_name": "Recording Media",
+        "type": "MENU",
+        "current": "Card",
+        "choices": ["Card", "SDRAM"],
+        "readonly": False,
+        "description": "Recording media"
+    },
+    "/main/settings/reversedial": {
+        "full_path": "/main/settings/reversedial",
+        "section_path": "/main/settings",
+        "name": "reversedial",
+        "readable_name": "Reverse Command Dial",
+        "type": "TOGGLE",
+        "current": "0",
+        "choices": ["0", "1"],
+        "readonly": False,
+        "description": "Reverse command dial rotation"
+    },
+    "/main/settings/fastfs": {
+        "full_path": "/main/settings/fastfs",
+        "section_path": "/main/settings",
+        "name": "fastfs",
+        "readable_name": "Fast Filesystem",
+        "type": "TOGGLE",
+        "current": "0",
+        "choices": ["0", "1"],
+        "readonly": False,
+        "description": "Fast filesystem mode"
     },
     "/main/settings/capturetarget": {
         "full_path": "/main/settings/capturetarget",
@@ -65,29 +165,73 @@ MOCK_CAMERA_SETTINGS = {
         "current": "Memory card",
         "choices": ["Internal RAM", "Memory card"],
         "readonly": False,
-        "description": "Storage location for captured images"
+        "description": "Where to store captured images"
     },
-    "/main/settings/capture": {
-        "full_path": "/main/settings/capture",
-        "section_path": "/main/settings",
-        "name": "capture",
-        "readable_name": "Capture",
+    "/main/status/acpower": {
+        "full_path": "/main/status/acpower",
+        "section_path": "/main/status",
+        "name": "acpower",
+        "readable_name": "AC Power",
         "type": "TOGGLE",
         "current": "0",
         "choices": ["0", "1"],
-        "readonly": False,
-        "description": "Capture an image"
+        "readonly": True,
+        "description": "AC power status"
     },
-    "/main/settings/recordingmedia": {
-        "full_path": "/main/settings/recordingmedia",
-        "section_path": "/main/settings",
-        "name": "recordingmedia",
-        "readable_name": "Recording Media",
+    "/main/imgsettings/imagesize": {
+        "full_path": "/main/imgsettings/imagesize",
+        "section_path": "/main/imgsettings",
+        "name": "imagesize",
+        "readable_name": "Image Size",
         "type": "MENU",
-        "current": "Card",
-        "choices": ["Card", "Card + Card"],
+        "current": "Large",
+        "choices": ["Large", "Medium", "Small"],
         "readonly": False,
-        "description": "Recording media settings"
+        "description": "Image size setting"
+    },
+    "/main/imgsettings/iso": {
+        "full_path": "/main/imgsettings/iso",
+        "section_path": "/main/imgsettings",
+        "name": "iso",
+        "readable_name": "ISO Speed",
+        "type": "MENU",
+        "current": "Auto",
+        "choices": ["Auto", "100", "200", "400", "800", "1600", "3200", "6400"],
+        "readonly": False,
+        "description": "ISO speed"
+    },
+    "/main/imgsettings/isoauto": {
+        "full_path": "/main/imgsettings/isoauto",
+        "section_path": "/main/imgsettings",
+        "name": "isoauto",
+        "readable_name": "ISO Auto",
+        "type": "TOGGLE",
+        "current": "1",
+        "choices": ["0", "1"],
+        "readonly": False,
+        "description": "Automatic ISO selection"
+    },
+    "/main/imgsettings/whitebalance": {
+        "full_path": "/main/imgsettings/whitebalance",
+        "section_path": "/main/imgsettings",
+        "name": "whitebalance",
+        "readable_name": "White Balance",
+        "type": "MENU",
+        "current": "Auto",
+        "choices": ["Auto", "Daylight", "Shade", "Cloudy", "Incandescent", "Fluorescent", "Flash", "Manual"],
+        "readonly": False,
+        "description": "White balance setting"
+    },
+    "/main/imgsettings/colorspace": {
+        "full_path": "/main/imgsettings/colorspace",
+        "section_path": "/main/imgsettings",
+        "name": "colorspace",
+        "readable_name": "Color Space",
+        "type": "MENU",
+        "current": "sRGB",
+        "choices": ["sRGB", "AdobeRGB"],
+        "readonly": False,
+        "description": "Color space setting"
     },
     "/main/capturesettings/exposurecompensation": {
         "full_path": "/main/capturesettings/exposurecompensation",
@@ -220,17 +364,6 @@ MOCK_CAMERA_SETTINGS = {
         "choices": ["Large Fine JPEG", "Large Normal JPEG", "Medium Fine JPEG", "Medium Normal JPEG", "Small Fine JPEG", "Small Normal JPEG", "Smaller JPEG", "Tiny JPEG", "RAW + Large Fine JPEG", "RAW"],
         "readonly": False,
         "description": "Image format setting"
-    },
-    "/main/imgsettings/imagesize": {
-        "full_path": "/main/imgsettings/imagesize",
-        "section_path": "/main/imgsettings",
-        "name": "imagesize",
-        "readable_name": "Image Size",
-        "type": "MENU",
-        "current": "Large",
-        "choices": ["Large", "Medium", "Small", "Tiny"],
-        "readonly": False,
-        "description": "Image size setting"
     },
     "/main/capturesettings/focusareawrap": {
         "full_path": "/main/capturesettings/focusareawrap",
