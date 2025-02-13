@@ -36,8 +36,8 @@ def get_camera_settings():
 
 def parse_gphoto_settings(output):
     settings = {}
-    current_setting = None
     current_path = None
+    current_setting = None
 
     for line in output.split('\n'):
         line = line.strip()
@@ -61,44 +61,44 @@ def parse_gphoto_settings(output):
             }
             settings[current_path] = current_setting
 
-            # If there's additional information on the same line after the path
-            remaining = ' '.join(line.split()[1:])
-            if remaining:
-                current_setting['current'] = remaining
+        elif current_setting and ':' in line:
+            key, value = line.split(':', 1)
+            key = key.strip().lower()
+            value = value.strip()
 
-        elif current_setting and line:
-            # Additional information about the current setting
-            if ':' in line:
-                key, value = line.split(':', 1)
-                key = key.strip().lower()
-                value = value.strip()
-
-                if key == 'type':
-                    if 'RANGE' in value:
-                        current_setting['type'] = 'RANGE'
-                    elif 'RADIO' in value or 'MENU' in value:
-                        current_setting['type'] = 'MENU'
-                    else:
-                        current_setting['type'] = 'TEXT'
-                elif key == 'current':
-                    current_setting['current'] = value
-                elif key == 'choice':
-                    current_setting['choices'].append(value)
-                elif key == 'bottom':
-                    if not current_setting['range']:
-                        current_setting['range'] = {}
-                    current_setting['range']['min'] = value
-                elif key == 'top':
-                    if not current_setting['range']:
-                        current_setting['range'] = {}
-                    current_setting['range']['max'] = value
-                elif key == 'step':
-                    if not current_setting['range']:
-                        current_setting['range'] = {}
-                    current_setting['range']['step'] = value
-                elif key == 'readonly':
-                    current_setting['readonly'] = value.lower() == 'yes'
-                elif key in ['help', 'info']:
+            if key == 'label':
+                current_setting['readable_name'] = value
+            elif key == 'type':
+                if 'RANGE' in value:
+                    current_setting['type'] = 'RANGE'
+                elif 'TOGGLE' in value:
+                    current_setting['type'] = 'TOGGLE'
+                elif 'RADIO' in value or 'MENU' in value:
+                    current_setting['type'] = 'MENU'
+                else:
+                    current_setting['type'] = 'TEXT'
+            elif key == 'current':
+                current_setting['current'] = value
+            elif key.startswith('choice'):
+                # Extract the actual value from choices like "0 On" or "1 Off"
+                choice_value = value.split(' ', 1)[-1] if ' ' in value else value
+                current_setting['choices'].append(choice_value)
+            elif key == 'bottom':
+                if not current_setting['range']:
+                    current_setting['range'] = {}
+                current_setting['range']['min'] = value
+            elif key == 'top':
+                if not current_setting['range']:
+                    current_setting['range'] = {}
+                current_setting['range']['max'] = value
+            elif key == 'step':
+                if not current_setting['range']:
+                    current_setting['range'] = {}
+                current_setting['range']['step'] = value
+            elif key == 'readonly':
+                current_setting['readonly'] = value.lower() == 'yes'
+            elif key in ['help', 'info', 'printable']:
+                if not current_setting['description']:  # Only set if not already set
                     current_setting['description'] = value
 
     return settings
