@@ -5,63 +5,81 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title">Camera Settings Management</h5>
+                <h5 class="card-title">Camera Settings Selection</h5>
+                <p class="text-muted mb-0">Enable settings that you want to adjust for day/night capture</p>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <input type="text" class="form-control" id="settings-search" 
-                           placeholder="Search settings...">
-                </div>
                 <form id="settings-toggle-form">
-                    <div class="accordion" id="settingsAccordion">
-                        {% set sections = {} %}
-                        {% for name, setting in settings.items() %}
-                            {% if setting.section not in sections %}
-                                {% set _ = sections.update({setting.section: []}) %}
-                            {% endif %}
-                            {% set _ = sections[setting.section].append((name, setting)) %}
-                        {% endfor %}
+                    {% set sections = {} %}
+                    {% for name, setting in settings.items() %}
+                        {% if setting.section not in sections %}
+                            {% set _ = sections.update({setting.section: []}) %}
+                        {% endif %}
+                        {% set _ = sections[setting.section].append((name, setting)) %}
+                    {% endfor %}
 
-                        {% for section, section_settings in sections.items() %}
-                        <div class="accordion-item setting-group" data-section="{{ section }}">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" 
+                    {% for section, section_settings in sections.items() %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <button class="btn btn-link w-100 text-start" type="button" 
                                         data-bs-toggle="collapse" 
                                         data-bs-target="#section-{{ section }}">
-                                    {{ section|title }}
+                                    /main/{{ section }}/
                                 </button>
-                            </h2>
-                            <div id="section-{{ section }}" class="accordion-collapse collapse" 
-                                 data-bs-parent="#settingsAccordion">
-                                <div class="accordion-body">
-                                    <div class="row">
-                                        {% for name, setting in section_settings %}
-                                        <div class="col-md-4 mb-3 setting-item" 
-                                             data-setting-name="{{ setting.readable_name|lower }}">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" 
-                                                       id="toggle-{{ name }}" name="{{ name }}"
-                                                       {% if name in enabled_settings %}checked{% endif %}
-                                                       {% if setting.readonly %}disabled{% endif %}>
-                                                <label class="form-check-label" for="toggle-{{ name }}"
-                                                       title="{{ setting.description }}">
-                                                    {{ setting.readable_name }}
-                                                    {% if setting.readonly %}
-                                                    <span class="badge bg-secondary">Read-only</span>
-                                                    {% endif %}
-                                                </label>
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
+                            </h6>
+                        </div>
+                        <div id="section-{{ section }}" class="collapse">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Setting</th>
+                                                <th>Current Value</th>
+                                                <th>Type</th>
+                                                <th>Enable</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for name, setting in section_settings %}
+                                            <tr>
+                                                <td>
+                                                    <span title="{{ setting.description }}">
+                                                        {{ setting.readable_name }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ setting.current }}</td>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        {% if setting.type == 'RANGE' %}
+                                                            Range ({{ setting.range.min }} - {{ setting.range.max }})
+                                                        {% elif setting.type == 'MENU' %}
+                                                            Options ({{ setting.choices|length }})
+                                                        {% else %}
+                                                            {{ setting.type }}
+                                                        {% endif %}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="toggle-{{ name }}" name="{{ name }}"
+                                                               {% if name in enabled_settings %}checked{% endif %}
+                                                               {% if setting.readonly %}disabled{% endif %}>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
-                        {% endfor %}
                     </div>
-                    <div class="mt-3">
-                        <button type="submit" class="btn btn-primary">Save Enabled Settings</button>
-                    </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-primary">Save Enabled Settings</button>
                 </form>
             </div>
         </div>
@@ -69,6 +87,7 @@
 </div>
 
 <div class="row">
+    <!-- Day Settings -->
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
@@ -81,42 +100,41 @@
                         <input type="number" class="form-control" name="day_interval" 
                                min="5" value="{{ intervals.day|default(300) }}">
                     </div>
-                    <div id="day-camera-settings">
-                        {% for name, setting in settings.items() %}
-                        {% if name in enabled_settings %}
-                        <div class="mb-3">
-                            <label class="form-label" title="{{ setting.description }}">
-                                {{ setting.readable_name }}
-                            </label>
-                            {% if setting.type == 'RANGE' and setting.range %}
-                            <input type="range" class="form-control" name="day_{{ name }}"
-                                   value="{{ setting.current }}"
-                                   min="{{ setting.range.min }}"
-                                   max="{{ setting.range.max }}"
-                                   step="{{ setting.range.step }}">
-                            <small class="form-text">Value: <span class="range-value">{{ setting.current }}</span></small>
-                            {% elif setting.type == 'MENU' %}
-                            <select class="form-control" name="day_{{ name }}">
-                                {% for choice in setting.choices %}
-                                <option value="{{ choice }}" 
-                                        {% if choice == setting.current %}selected{% endif %}>
-                                    {{ choice }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            {% else %}
-                            <input type="text" class="form-control" name="day_{{ name }}"
-                                   value="{{ setting.current }}">
-                            {% endif %}
-                        </div>
+                    {% for name, setting in settings.items() %}
+                    {% if name in enabled_settings %}
+                    <div class="mb-3">
+                        <label class="form-label" title="{{ setting.description }}">
+                            {{ setting.readable_name }}
+                        </label>
+                        {% if setting.type == 'RANGE' and setting.range %}
+                        <input type="range" class="form-control" name="day_{{ name }}"
+                               value="{{ setting.current }}"
+                               min="{{ setting.range.min }}"
+                               max="{{ setting.range.max }}"
+                               step="{{ setting.range.step }}">
+                        <small class="form-text">Value: <span class="range-value">{{ setting.current }}</span></small>
+                        {% elif setting.type == 'MENU' %}
+                        <select class="form-control" name="day_{{ name }}">
+                            {% for choice in setting.choices %}
+                            <option value="{{ choice }}" 
+                                    {% if choice == setting.current %}selected{% endif %}>
+                                {{ choice }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <input type="text" class="form-control" name="day_{{ name }}"
+                               value="{{ setting.current }}">
                         {% endif %}
-                        {% endfor %}
                     </div>
+                    {% endif %}
+                    {% endfor %}
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- Night Settings -->
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
@@ -129,37 +147,35 @@
                         <input type="number" class="form-control" name="night_interval" 
                                min="5" value="{{ intervals.night|default(600) }}">
                     </div>
-                    <div id="night-camera-settings">
-                        {% for name, setting in settings.items() %}
-                        {% if name in enabled_settings %}
-                        <div class="mb-3">
-                            <label class="form-label" title="{{ setting.description }}">
-                                {{ setting.readable_name }}
-                            </label>
-                            {% if setting.type == 'RANGE' and setting.range %}
-                            <input type="range" class="form-control" name="night_{{ name }}"
-                                   value="{{ setting.current }}"
-                                   min="{{ setting.range.min }}"
-                                   max="{{ setting.range.max }}"
-                                   step="{{ setting.range.step }}">
-                            <small class="form-text">Value: <span class="range-value">{{ setting.current }}</span></small>
-                            {% elif setting.type == 'MENU' %}
-                            <select class="form-control" name="night_{{ name }}">
-                                {% for choice in setting.choices %}
-                                <option value="{{ choice }}" 
-                                        {% if choice == setting.current %}selected{% endif %}>
-                                    {{ choice }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            {% else %}
-                            <input type="text" class="form-control" name="night_{{ name }}"
-                                   value="{{ setting.current }}">
-                            {% endif %}
-                        </div>
+                    {% for name, setting in settings.items() %}
+                    {% if name in enabled_settings %}
+                    <div class="mb-3">
+                        <label class="form-label" title="{{ setting.description }}">
+                            {{ setting.readable_name }}
+                        </label>
+                        {% if setting.type == 'RANGE' and setting.range %}
+                        <input type="range" class="form-control" name="night_{{ name }}"
+                               value="{{ setting.current }}"
+                               min="{{ setting.range.min }}"
+                               max="{{ setting.range.max }}"
+                               step="{{ setting.range.step }}">
+                        <small class="form-text">Value: <span class="range-value">{{ setting.current }}</span></small>
+                        {% elif setting.type == 'MENU' %}
+                        <select class="form-control" name="night_{{ name }}">
+                            {% for choice in setting.choices %}
+                            <option value="{{ choice }}" 
+                                    {% if choice == setting.current %}selected{% endif %}>
+                                {{ choice }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <input type="text" class="form-control" name="night_{{ name }}"
+                               value="{{ setting.current }}">
                         {% endif %}
-                        {% endfor %}
                     </div>
+                    {% endif %}
+                    {% endfor %}
                 </form>
             </div>
         </div>
