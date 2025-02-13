@@ -2,6 +2,7 @@ import subprocess
 import json
 import logging
 from mock_camera_settings import get_mock_settings
+from attached_assets.gPhoto2settings import gPhoto2setting
 
 def get_camera_status():
     try:
@@ -20,10 +21,31 @@ def get_camera_settings():
         result = subprocess.run(['gphoto2', '--list-all-config'],
                               capture_output=True, text=True)
         logging.debug(f"Camera settings output: {result.stdout}")
+
         if result.returncode == 0 and result.stdout.strip():
-            settings = parse_gphoto_settings(result.stdout)
+            # Use the gPhoto2setting class to parse the output
+            parser = gPhoto2setting(result.stdout)
+            settings = {}
+
+            # Convert the parsed settings to our API format
+            for setting in parser.formObject:
+                path = setting['path']
+                settings[path] = {
+                    'full_path': path,
+                    'section_path': f"/main/{setting['group']}",
+                    'name': setting['name'],
+                    'readable_name': setting['label'],
+                    'type': setting['typeUI'],
+                    'current': setting['current'],
+                    'choices': [opt['name'] for opt in setting['options']] if isinstance(setting['options'], list) else [],
+                    'range': setting['options'] if isinstance(setting['options'], dict) else None,
+                    'readonly': False,  # This info isn't in the original parser, defaulting to False
+                    'description': f"Setting for {setting['label']}"
+                }
+
             if settings:  # If we got settings successfully
                 return settings
+
             logging.warning("No settings found in camera output, falling back to mock settings")
             return get_mock_settings()
         else:
@@ -33,75 +55,6 @@ def get_camera_settings():
     except Exception as e:
         logging.error(f"Camera settings error: {str(e)}, falling back to mock settings")
         return get_mock_settings()
-
-def parse_gphoto_settings(output):
-    settings = {}
-    current_path = None
-    current_setting = None
-
-    for line in output.split('\n'):
-        line = line.strip()
-        if not line:
-            continue
-
-        if line.startswith('/main/'):
-            # New setting found
-            current_path = line.split()[0]  # Get path before any spaces
-            current_setting = {
-                'full_path': current_path,
-                'section_path': '/'.join(current_path.split('/')[:-1]),
-                'name': current_path.split('/')[-1],
-                'readable_name': current_path.split('/')[-1].replace('_', ' ').title(),
-                'type': None,
-                'current': None,
-                'choices': [],
-                'range': None,
-                'readonly': False,
-                'description': ''
-            }
-            settings[current_path] = current_setting
-
-        elif current_setting and ':' in line:
-            key, value = line.split(':', 1)
-            key = key.strip().lower()
-            value = value.strip()
-
-            if key == 'label':
-                current_setting['readable_name'] = value
-            elif key == 'type':
-                if 'RANGE' in value:
-                    current_setting['type'] = 'RANGE'
-                elif 'TOGGLE' in value:
-                    current_setting['type'] = 'TOGGLE'
-                elif 'RADIO' in value or 'MENU' in value:
-                    current_setting['type'] = 'MENU'
-                else:
-                    current_setting['type'] = 'TEXT'
-            elif key == 'current':
-                current_setting['current'] = value
-            elif key.startswith('choice'):
-                # Extract the actual value from choices like "0 On" or "1 Off"
-                choice_value = value.split(' ', 1)[-1] if ' ' in value else value
-                current_setting['choices'].append(choice_value)
-            elif key == 'bottom':
-                if not current_setting['range']:
-                    current_setting['range'] = {}
-                current_setting['range']['min'] = value
-            elif key == 'top':
-                if not current_setting['range']:
-                    current_setting['range'] = {}
-                current_setting['range']['max'] = value
-            elif key == 'step':
-                if not current_setting['range']:
-                    current_setting['range'] = {}
-                current_setting['range']['step'] = value
-            elif key == 'readonly':
-                current_setting['readonly'] = value.lower() == 'yes'
-            elif key in ['help', 'info', 'printable']:
-                if not current_setting['description']:  # Only set if not already set
-                    current_setting['description'] = value
-
-    return settings
 
 def toggle_capture():
     try:
