@@ -33,7 +33,6 @@ def get_camera_settings():
 def parse_gphoto_settings(output):
     settings = {}
     current_setting = None
-    current_section = None
 
     for line in output.split('\n'):
         line = line.strip()
@@ -41,27 +40,30 @@ def parse_gphoto_settings(output):
             continue
 
         if line.startswith('/main/'):
-            # Extract section and setting name
-            parts = line.split('/')
-            if len(parts) >= 3:
-                section = parts[2].split()[0]  # Get section name before any spaces
-                setting_name = parts[-1].split()[0]  # Get last part before any spaces
+            # Extract the full path and setting name
+            path = line.split()[0]  # Get path before any spaces
+            parts = path.split('/')
+            setting_name = parts[-1]  # Last part is the setting name
 
-                # Create a readable name for the setting
-                readable_name = setting_name.replace('_', ' ').title()
+            # Get the section path (everything except the setting name)
+            section_path = '/'.join(parts[:-1])
 
-                current_setting = {
-                    'name': setting_name,
-                    'section': section,
-                    'readable_name': readable_name,
-                    'type': None,
-                    'current': None,
-                    'choices': [],
-                    'range': None,
-                    'readonly': False,
-                    'description': ''
-                }
-                settings[setting_name] = current_setting
+            # Create a readable name for the setting
+            readable_name = setting_name.replace('_', ' ').title()
+
+            current_setting = {
+                'name': setting_name,
+                'full_path': path,
+                'section_path': section_path,
+                'readable_name': readable_name,
+                'type': None,
+                'current': None,
+                'choices': [],
+                'range': None,
+                'readonly': False,
+                'description': ''
+            }
+            settings[path] = current_setting  # Use full path as key
 
         elif current_setting:
             if line.startswith('Label:'):

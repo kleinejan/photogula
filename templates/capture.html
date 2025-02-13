@@ -11,11 +11,12 @@
             <div class="card-body">
                 <form id="settings-toggle-form">
                     {% set sections = {} %}
-                    {% for name, setting in settings.items() %}
-                        {% if setting.section not in sections %}
-                            {% set _ = sections.update({setting.section: []}) %}
+                    {% for path, setting in settings.items() %}
+                        {% set section = setting.section_path %}
+                        {% if section not in sections %}
+                            {% set _ = sections.update({section: []}) %}
                         {% endif %}
-                        {% set _ = sections[setting.section].append((name, setting)) %}
+                        {% set _ = sections[section].append((path, setting)) %}
                     {% endfor %}
 
                     {% for section, section_settings in sections.items() %}
@@ -24,12 +25,12 @@
                             <h6 class="mb-0">
                                 <button class="btn btn-link w-100 text-start" type="button" 
                                         data-bs-toggle="collapse" 
-                                        data-bs-target="#section-{{ section }}">
-                                    /main/{{ section }}/
+                                        data-bs-target="#section-{{ section|replace('/', '-') }}">
+                                    {{ section }}/
                                 </button>
                             </h6>
                         </div>
-                        <div id="section-{{ section }}" class="collapse">
+                        <div id="section-{{ section|replace('/', '-') }}" class="collapse">
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table">
@@ -42,7 +43,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for name, setting in section_settings %}
+                                            {% for path, setting in section_settings %}
                                             <tr>
                                                 <td>
                                                     <span title="{{ setting.description }}">
@@ -64,8 +65,9 @@
                                                 <td>
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" 
-                                                               id="toggle-{{ name }}" name="{{ name }}"
-                                                               {% if name in enabled_settings %}checked{% endif %}
+                                                               id="toggle-{{ path|replace('/', '-') }}" 
+                                                               name="{{ path }}"
+                                                               {% if path in enabled_settings %}checked{% endif %}
                                                                {% if setting.readonly %}disabled{% endif %}>
                                                     </div>
                                                 </td>
@@ -100,21 +102,21 @@
                         <input type="number" class="form-control" name="day_interval" 
                                min="5" value="{{ intervals.day|default(300) }}">
                     </div>
-                    {% for name, setting in settings.items() %}
-                    {% if name in enabled_settings %}
+                    {% for path, setting in settings.items() %}
+                    {% if path in enabled_settings %}
                     <div class="mb-3">
                         <label class="form-label" title="{{ setting.description }}">
                             {{ setting.readable_name }}
                         </label>
                         {% if setting.type == 'RANGE' and setting.range %}
-                        <input type="range" class="form-control" name="day_{{ name }}"
+                        <input type="range" class="form-control" name="day_{{ path }}"
                                value="{{ setting.current }}"
                                min="{{ setting.range.min }}"
                                max="{{ setting.range.max }}"
                                step="{{ setting.range.step }}">
                         <small class="form-text">Value: <span class="range-value">{{ setting.current }}</span></small>
                         {% elif setting.type == 'MENU' %}
-                        <select class="form-control" name="day_{{ name }}">
+                        <select class="form-control" name="day_{{ path }}">
                             {% for choice in setting.choices %}
                             <option value="{{ choice }}" 
                                     {% if choice == setting.current %}selected{% endif %}>
@@ -123,7 +125,7 @@
                             {% endfor %}
                         </select>
                         {% else %}
-                        <input type="text" class="form-control" name="day_{{ name }}"
+                        <input type="text" class="form-control" name="day_{{ path }}"
                                value="{{ setting.current }}">
                         {% endif %}
                     </div>
@@ -147,21 +149,21 @@
                         <input type="number" class="form-control" name="night_interval" 
                                min="5" value="{{ intervals.night|default(600) }}">
                     </div>
-                    {% for name, setting in settings.items() %}
-                    {% if name in enabled_settings %}
+                    {% for path, setting in settings.items() %}
+                    {% if path in enabled_settings %}
                     <div class="mb-3">
                         <label class="form-label" title="{{ setting.description }}">
                             {{ setting.readable_name }}
                         </label>
                         {% if setting.type == 'RANGE' and setting.range %}
-                        <input type="range" class="form-control" name="night_{{ name }}"
+                        <input type="range" class="form-control" name="night_{{ path }}"
                                value="{{ setting.current }}"
                                min="{{ setting.range.min }}"
                                max="{{ setting.range.max }}"
                                step="{{ setting.range.step }}">
                         <small class="form-text">Value: <span class="range-value">{{ setting.current }}</span></small>
                         {% elif setting.type == 'MENU' %}
-                        <select class="form-control" name="night_{{ name }}">
+                        <select class="form-control" name="night_{{ path }}">
                             {% for choice in setting.choices %}
                             <option value="{{ choice }}" 
                                     {% if choice == setting.current %}selected{% endif %}>
@@ -170,7 +172,7 @@
                             {% endfor %}
                         </select>
                         {% else %}
-                        <input type="text" class="form-control" name="night_{{ name }}"
+                        <input type="text" class="form-control" name="night_{{ path }}"
                                value="{{ setting.current }}">
                         {% endif %}
                     </div>
