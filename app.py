@@ -125,19 +125,39 @@ def schedules():
     """View all schedules"""
     schedules = db.session.query(models.ScheduledSettings).all()
     camera_settings = db.session.query(models.CameraSettings).all()
-    return render_template('schedules.html', schedules=schedules, camera_settings=camera_settings)
+    return render_template('schedules.html', 
+                         schedules=schedules, 
+                         camera_settings=camera_settings,
+                         today=datetime.now())
 
 @app.route('/api/schedules', methods=['POST'])
 def create_schedule():
     """Create a new schedule"""
     try:
         data = request.json
-        # Convert date and time strings to Python objects
-        start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
-        end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
-        start_time = datetime.strptime(data['start_time'], '%H:%M').time()
-        end_time = datetime.strptime(data['end_time'], '%H:%M').time()
+        if not data.get('name'):
+            return jsonify({"success": False, "error": "Name is required"}), 400
 
+        if not data.get('camera_settings_id'):
+            return jsonify({"success": False, "error": "Camera settings selection is required"}), 400
+
+        # Convert date and time strings to Python objects
+        try:
+            start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+            end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+            start_time = datetime.strptime(data['start_time'], '%H:%M').time()
+            end_time = datetime.strptime(data['end_time'], '%H:%M').time()
+        except ValueError as e:
+            return jsonify({"success": False, "error": "Invalid date or time format"}), 400
+
+        # Validate date and time
+        if start_date > end_date:
+            return jsonify({"success": False, "error": "End date must be after start date"}), 400
+
+        if start_time >= end_time:
+            return jsonify({"success": False, "error": "End time must be after start time"}), 400
+
+        # Create schedule
         schedule = models.ScheduledSettings(
             name=data['name'],
             camera_settings_id=data['camera_settings_id'],
@@ -154,8 +174,9 @@ def create_schedule():
         db.session.commit()
         return jsonify({"success": True, "message": "Schedule created successfully"})
     except Exception as e:
+        db.session.rollback()
         logging.error(f"Error creating schedule: {str(e)}")
-        return jsonify({"success": False, "error": str(e)})
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/schedules/<int:schedule_id>', methods=['PUT'])
 def update_schedule(schedule_id):
@@ -190,6 +211,7 @@ def update_schedule(schedule_id):
     except Exception as e:
         logging.error(f"Error updating schedule: {str(e)}")
         return jsonify({"success": False, "error": str(e)})
+
 
 
 with app.app_context():

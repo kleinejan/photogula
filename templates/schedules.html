@@ -2,6 +2,9 @@
 
 {% block content %}
 <div class="container">
+    <!-- Alert for error messages -->
+    <div id="alertBox" class="alert alert-danger d-none" role="alert"></div>
+
     <div class="row mb-4">
         <div class="col-12">
             <h2>Schedule Management</h2>
@@ -72,7 +75,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="createScheduleForm">
+                <form id="createScheduleForm" onsubmit="return false;">
                     <div class="mb-3">
                         <label class="form-label">Name</label>
                         <input type="text" class="form-control" name="name" required>
@@ -88,11 +91,13 @@
                     <div class="row mb-3">
                         <div class="col">
                             <label class="form-label">Start Date</label>
-                            <input type="date" class="form-control" name="start_date" required>
+                            <input type="date" class="form-control" name="start_date" required
+                                   min="{{ today.strftime('%Y-%m-%d') }}">
                         </div>
                         <div class="col">
                             <label class="form-label">End Date</label>
-                            <input type="date" class="form-control" name="end_date" required>
+                            <input type="date" class="form-control" name="end_date" required
+                                   min="{{ today.strftime('%Y-%m-%d') }}">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -134,15 +139,54 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const alertBox = document.getElementById('alertBox');
+
+    function showError(message) {
+        alertBox.textContent = message;
+        alertBox.classList.remove('d-none');
+        setTimeout(() => {
+            alertBox.classList.add('d-none');
+        }, 5000);
+    }
+
+    // Form validation
+    function validateForm(formData) {
+        const startDate = new Date(formData.get('start_date'));
+        const endDate = new Date(formData.get('end_date'));
+        const startTime = formData.get('start_time');
+        const endTime = formData.get('end_time');
+
+        if (startDate > endDate) {
+            showError('End date must be after start date');
+            return false;
+        }
+
+        if (startTime >= endTime) {
+            showError('End time must be after start time');
+            return false;
+        }
+
+        return true;
+    }
+
     // Handle schedule creation
-    document.getElementById('saveSchedule').addEventListener('click', function() {
+    document.getElementById('saveSchedule').addEventListener('click', async function() {
         const form = document.getElementById('createScheduleForm');
         const formData = new FormData(form);
+
+        if (!validateForm(formData)) {
+            return;
+        }
 
         // Convert days checkboxes to binary string
         let daysOfWeek = '';
         for (let i = 0; i < 7; i++) {
             daysOfWeek += document.getElementById(`day_${i}`).checked ? '1' : '0';
+        }
+
+        if (daysOfWeek === '0000000') {
+            showError('Please select at least one day of the week');
+            return;
         }
 
         const scheduleData = {
@@ -156,21 +200,25 @@ document.addEventListener('DOMContentLoaded', function() {
             interval_seconds: parseInt(formData.get('interval_seconds'))
         };
 
-        fetch('/api/schedules', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(scheduleData)
-        })
-        .then(response => response.json())
-        .then(data => {
+        try {
+            const response = await fetch('/api/schedules', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(scheduleData)
+            });
+
+            const data = await response.json();
+
             if (data.success) {
                 window.location.reload();
             } else {
-                alert('Error creating schedule: ' + data.error);
+                showError('Error creating schedule: ' + (data.error || 'Unknown error'));
             }
-        });
+        } catch (error) {
+            showError('Network error while saving schedule');
+        }
     });
 });
 </script>
