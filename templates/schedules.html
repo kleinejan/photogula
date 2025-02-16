@@ -26,9 +26,8 @@
                                     <th>Name</th>
                                     <th>Date Range</th>
                                     <th>Time Window</th>
-                                    <th>Days</th>
-                                    <th>Camera Settings</th>
-                                    <th>Interval</th>
+                                    <th>Day Interval</th>
+                                    <th>Night Interval</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -39,9 +38,8 @@
                                     <td>{{ schedule.name }}</td>
                                     <td>{{ schedule.start_date.strftime('%Y-%m-%d') }} to {{ schedule.end_date.strftime('%Y-%m-%d') }}</td>
                                     <td>{{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}</td>
-                                    <td>{{ schedule.days_of_week }}</td>
-                                    <td>{{ schedule.camera_settings.name }}</td>
-                                    <td>{{ schedule.interval_seconds }}s</td>
+                                    <td>{{ schedule.day_interval }}s</td>
+                                    <td>{{ schedule.night_interval }}s</td>
                                     <td>
                                         <span class="badge {% if schedule.is_active %}bg-success{% else %}bg-danger{% endif %}">
                                             {{ 'Active' if schedule.is_active else 'Inactive' }}
@@ -80,14 +78,6 @@
                         <label class="form-label">Name</label>
                         <input type="text" class="form-control" name="name" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Camera Settings</label>
-                        <select class="form-control" name="camera_settings_id" required>
-                            {% for setting in camera_settings %}
-                            <option value="{{ setting.id }}">{{ setting.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
                     <div class="row mb-3">
                         <div class="col">
                             <label class="form-label">Start Date</label>
@@ -110,22 +100,19 @@
                             <input type="time" class="form-control" name="end_time" required>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Days of Week</label>
-                        <div class="btn-group" role="group">
-                            {% for day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
-                            <input type="checkbox" class="btn-check" name="day_{{ loop.index0 }}"
-                                   id="day_{{ loop.index0 }}" autocomplete="off">
-                            <label class="btn btn-outline-primary" for="day_{{ loop.index0 }}">{{ day }}</label>
-                            {% endfor %}
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Day Interval (seconds)</label>
+                            <input type="number" class="form-control" name="day_interval" 
+                                   min="5" value="300" required>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Night Interval (seconds)</label>
+                            <input type="number" class="form-control" name="night_interval" 
+                                   min="5" value="600" required>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Interval (seconds)</label>
-                        <input type="number" class="form-control" name="interval_seconds" 
-                               min="5" value="300" required>
-                    </div>
-                </form>
+                    </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -178,26 +165,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Convert days checkboxes to binary string
-        let daysOfWeek = '';
-        for (let i = 0; i < 7; i++) {
-            daysOfWeek += document.getElementById(`day_${i}`).checked ? '1' : '0';
-        }
-
-        if (daysOfWeek === '0000000') {
-            showError('Please select at least one day of the week');
-            return;
-        }
-
         const scheduleData = {
             name: formData.get('name'),
-            camera_settings_id: parseInt(formData.get('camera_settings_id')),
             start_date: formData.get('start_date'),
             end_date: formData.get('end_date'),
             start_time: formData.get('start_time'),
             end_time: formData.get('end_time'),
-            days_of_week: daysOfWeek,
-            interval_seconds: parseInt(formData.get('interval_seconds'))
+            day_interval: parseInt(formData.get('day_interval')),
+            night_interval: parseInt(formData.get('night_interval'))
         };
 
         try {

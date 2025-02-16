@@ -138,9 +138,6 @@ def create_schedule():
         if not data.get('name'):
             return jsonify({"success": False, "error": "Name is required"}), 400
 
-        if not data.get('camera_settings_id'):
-            return jsonify({"success": False, "error": "Camera settings selection is required"}), 400
-
         # Convert date and time strings to Python objects
         try:
             start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
@@ -160,14 +157,13 @@ def create_schedule():
         # Create schedule
         schedule = models.ScheduledSettings(
             name=data['name'],
-            camera_settings_id=data['camera_settings_id'],
             start_date=start_date,
             end_date=end_date,
             start_time=start_time,
             end_time=end_time,
-            days_of_week=data['days_of_week'],
-            interval_seconds=data['interval_seconds'],
-            is_active=data.get('is_active', True)
+            day_interval=data.get('day_interval', 300),
+            night_interval=data.get('night_interval', 600),
+            is_active=True
         )
 
         db.session.add(schedule)
