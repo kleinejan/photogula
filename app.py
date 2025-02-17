@@ -210,6 +210,20 @@ def update_schedule(schedule_id):
         return jsonify({"success": False, "error": str(e)})
 
 
+@app.route('/api/camera/reload-config', methods=['POST'])
+def reload_camera_config():
+    """Force reload of camera configuration"""
+    try:
+        settings = camera.get_camera_settings(force_refresh=True)
+        return jsonify({"success": True, "settings": settings})
+    except Exception as e:
+        logging.error(f"Error reloading camera config: {str(e)}")
+        return jsonify({
+            "success": False, 
+            "error": "Failed to reload camera configuration. Please check if the camera is properly connected.",
+            "details": str(e)
+        }), 500
+
 with app.app_context():
     import models
     db.create_all()

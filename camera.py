@@ -16,8 +16,33 @@ def get_camera_status():
         logging.error(f"Camera status error: {str(e)}")
         return {"connected": False, "message": str(e)}
 
-def get_camera_settings():
+def stop_capture():
+    """Stop any ongoing capture processes"""
     try:
+        # Kill any existing gphoto2 processes
+        subprocess.run(['pkill', '-f', 'gphoto2'], 
+                      capture_output=True, 
+                      text=True)
+        return True
+    except Exception as e:
+        logging.error(f"Error stopping capture: {str(e)}")
+        return False
+
+def get_camera_settings(force_refresh=False):
+    """Get camera settings, optionally forcing a refresh from the camera"""
+    try:
+        if not force_refresh:
+            # Try to get settings from database first
+            settings_config = db.session.query(CameraSettings).first()
+            if settings_config and settings_config.camera_config:
+                return settings_config.camera_config
+
+        # If force_refresh or no settings in database, get from camera
+        stop_capture()  # Stop any ongoing captures first
+
+        # Wait a moment for the camera to be ready
+        subprocess.run(['sleep', '2'], capture_output=True)
+
         # Run gphoto2 with debugging enabled to get detailed output
         result = subprocess.run(['gphoto2', '--debug', '--list-all-config'],
                               capture_output=True, text=True, env={'LANG': 'C'})

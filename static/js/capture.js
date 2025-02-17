@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const daySettingsForm = document.getElementById('day-settings-form');
     const nightSettingsForm = document.getElementById('night-settings-form');
     const saveSettingsBtn = document.getElementById('save-settings');
+    const reloadConfigBtn = document.getElementById('reload-config');
 
     // Range input value display
     document.querySelectorAll('input[type="range"]').forEach(range => {
@@ -62,6 +63,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => console.error('Error:', error));
+        });
+    }
+
+    if (reloadConfigBtn) {
+        reloadConfigBtn.addEventListener('click', function() {
+            if (!confirm('This will stop all capture tasks and reload the camera configuration. Continue?')) {
+                return;
+            }
+
+            fetch('/api/camera/reload-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Camera configuration reloaded successfully');
+                    location.reload();
+                } else {
+                    alert('Error reloading camera configuration: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Network error while reloading camera configuration');
+            });
         });
     }
 });
