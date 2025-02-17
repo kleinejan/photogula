@@ -1,6 +1,9 @@
 import subprocess
 import logging
+from datetime import datetime
 from attached_assets.gPhoto2settings import gPhoto2setting
+from extensions import db
+from models import CameraSettings
 
 def get_camera_status():
     try:
@@ -43,6 +46,21 @@ def get_camera_settings():
 
             if not settings:
                 raise Exception("No settings found in camera output")
+
+            # Store settings in database
+            settings_config = db.session.query(CameraSettings).first()
+            if not settings_config:
+                settings_config = CameraSettings(
+                    name="Default",
+                    camera_config=settings,
+                    last_config_update=datetime.utcnow()
+                )
+                db.session.add(settings_config)
+            else:
+                settings_config.camera_config = settings
+                settings_config.last_config_update = datetime.utcnow()
+
+            db.session.commit()
             return settings
         else:
             # If no camera is connected or there's an error, raise exception

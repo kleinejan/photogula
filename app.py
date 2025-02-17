@@ -1,17 +1,12 @@
 import os
 from flask import Flask, render_template, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
-import camera
-import utils
 import logging
 from datetime import datetime, time
 from sqlalchemy import and_
+from extensions import db
+import camera
+import utils
 
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "timelapse_secret_key"
 
