@@ -36,23 +36,29 @@ def dashboard():
 
 @app.route('/capture')
 def capture():
-    camera_settings = camera.get_camera_settings()
-    # Get current settings from database
-    settings_config = db.session.query(models.CameraSettings).first()
-    enabled_settings = []
-    intervals = {'day': 300, 'night': 600}
+    try:
+        camera_settings = camera.get_camera_settings()
+        # Get current settings from database
+        settings_config = db.session.query(models.CameraSettings).first()
+        enabled_settings = []
+        intervals = {'day': 300, 'night': 600}
 
-    if settings_config:
-        enabled_settings = settings_config.enabled_settings or []
-        intervals = {
-            'day': settings_config.day_interval,
-            'night': settings_config.night_interval
-        }
+        if settings_config:
+            enabled_settings = settings_config.enabled_settings or []
+            intervals = {
+                'day': settings_config.day_interval,
+                'night': settings_config.night_interval
+            }
 
-    return render_template('capture.html', 
-                         settings=camera_settings,
-                         enabled_settings=enabled_settings,
-                         intervals=intervals)
+        return render_template('capture.html', 
+                            settings=camera_settings,
+                            enabled_settings=enabled_settings,
+                            intervals=intervals)
+    except Exception as e:
+        logging.error(f"Error accessing camera: {str(e)}")
+        return render_template('error.html', 
+                             error="Could not access camera settings. Please check if the camera is properly connected.",
+                             details=str(e))
 
 @app.route('/preview')
 def preview():
@@ -207,7 +213,6 @@ def update_schedule(schedule_id):
     except Exception as e:
         logging.error(f"Error updating schedule: {str(e)}")
         return jsonify({"success": False, "error": str(e)})
-
 
 
 with app.app_context():

@@ -1,7 +1,5 @@
 import subprocess
-import json
 import logging
-from mock_camera_settings import get_mock_settings
 from attached_assets.gPhoto2settings import gPhoto2setting
 
 def get_camera_status():
@@ -17,9 +15,9 @@ def get_camera_status():
 
 def get_camera_settings():
     try:
-        # First try to get real camera settings
-        result = subprocess.run(['gphoto2', '--list-all-config'],
-                              capture_output=True, text=True)
+        # Run gphoto2 with debugging enabled to get detailed output
+        result = subprocess.run(['gphoto2', '--debug', '--list-all-config'],
+                              capture_output=True, text=True, env={'LANG': 'C'})
         logging.debug(f"Camera settings output: {result.stdout}")
 
         if result.returncode == 0 and result.stdout.strip():
@@ -43,18 +41,15 @@ def get_camera_settings():
                     'description': f"Setting for {setting['label']}"
                 }
 
-            if settings:  # If we got settings successfully
-                return settings
-
-            logging.warning("No settings found in camera output, falling back to mock settings")
-            return get_mock_settings()
+            if not settings:
+                raise Exception("No settings found in camera output")
+            return settings
         else:
-            # If no camera is connected or there's an error, return mock settings
-            logging.info("Using mock camera settings")
-            return get_mock_settings()
+            # If no camera is connected or there's an error, raise exception
+            raise Exception(f"Error getting camera settings: {result.stderr}")
     except Exception as e:
-        logging.error(f"Camera settings error: {str(e)}, falling back to mock settings")
-        return get_mock_settings()
+        logging.error(f"Camera settings error: {str(e)}")
+        raise RuntimeError(f"Failed to get camera settings: {str(e)}")
 
 def toggle_capture():
     try:
